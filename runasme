@@ -35,13 +35,13 @@ if [[ -z $group ]]; then
 fi
 
 # TODO Find out if uid is already in /etc/passwd (and then better use that username unless explicitly configured)
-echo "$user:x:$uid:$gid:$user,,,:/home/$user:/bin/sh" >> /etc/passwd
+echo "$user:x:$uid:$gid:$user,,,:/home/user:/bin/sh" >> /etc/passwd
 
 # TODO Find out if gid is already in /etc/group (and then better use that group name unles explicityly configured)
 echo "$group:x:$gid:" >> /etc/group
 
-[[ ! -d /home/$user ]] && mkdir /home/$user
-chown $uid:$gid /home/$user
-chmod 755 /home/$user
+[[ ! -d /home/user ]] && mkdir /home/user
+chown $uid:$gid /home/user
+chmod 755 /home/user
 
 (cd "$RUNASME_WORKDIR" && sudo -u $user "$@")
