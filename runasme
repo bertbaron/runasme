@@ -1,0 +1,47 @@
+#!/bin/sh
+set -e
+
+: ${RUNASME_WORKDIR:=/workdir}
+user=${USER:-user}
+group=$GROUP
+
+while getopts ":u:g:" opt; do
+  case $opt in
+    u)
+      user="$OPTARG"
+      ;;
+    g)
+      group="$OPTARG"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+shift $(expr $OPTIND - 1 )
+
+uid=$(stat -c "%u" "$RUNASME_WORKDIR")
+gid=$(stat -c "%g" "$RUNASME_WORKDIR")
+
+if [[ -z $group ]]; then
+  if [[ $uid -eq $gid ]]; then group=$user
+  else group=group
+  fi
+fi
+
+# TODO Find out if uid is already in /etc/passwd (and then better use that username unless explicitly configured)
+echo "$user:x:$uid:$gid:$user,,,:/home/$user:/bin/sh" >> /etc/passwd
+
+# TODO Find out if gid is already in /etc/group (and then better use that group name unles explicityly configured)
+echo "$group:x:$gid:" >> /etc/group
+
+[[ ! -d /home/$user ]] && mkdir /home/$user
+chown $uid:$gid /home/$user
+chmod 755 /home/$user
+
+(cd "$RUNASME_WORKDIR" && sudo -u $user "$@")
