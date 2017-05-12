@@ -1,0 +1,14 @@
+#!/bin/sh
+
+case $1 in
+  user)
+        echo "$(id -u):$(id -g)/$(id -nu):$(id -ng)"
+        exit 0
+        ;;
+  eval)
+        eval "echo $2"
+        exit 0
+        ;;
+  *)    echo "Unknown spy command: $1"
+        exit 1
+esac

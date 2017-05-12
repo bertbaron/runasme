@@ -28,8 +28,8 @@ shift $(expr $OPTIND - 1 )
 uid=$(stat -c "%u" "$RUNASME_WORKDIR")
 gid=$(stat -c "%g" "$RUNASME_WORKDIR")
 
-if [[ -z $group ]]; then
-  if [[ $uid -eq $gid ]]; then group=$user
+if [ -z $group ]; then
+  if [ $uid -eq $gid ]; then group=$user
   else group=group
   fi
 fi
@@ -40,8 +40,8 @@ echo "$user:x:$uid:$gid:$user,,,:/home/user:/bin/sh" >> /etc/passwd
 # TODO Find out if gid is already in /etc/group (and then better use that group name unles explicityly configured)
 echo "$group:x:$gid:" >> /etc/group
 
-[[ ! -d /home/user ]] && mkdir /home/user
+[ ! -d /home/user ] && mkdir /home/user
 chown $uid:$gid /home/user
 chmod 755 /home/user
 
-(cd "$RUNASME_WORKDIR" && sudo -u $user "$@")
+(cd "$RUNASME_WORKDIR" && sudo HOME=/home/user -E -u $user "$@")

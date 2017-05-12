@@ -1,0 +1,14 @@
+#!/bin/bash
+
+failed=""
+for image in "alpine" "ubuntu"; do
+  export TEST_BASE="$image"
+  ./test || failed="$failed $image"
+done
+
+if [ -z "$failed" ]; then
+  echo "All tests passed"
+else
+  echo "FAILED TESTS FOR:$failed"
+  exit 1
+fi

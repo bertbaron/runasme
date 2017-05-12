@@ -1,0 +1,31 @@
+#!/bin/bash
+
+TEST_TAG=runasme_test
+: ${TEST_BASE:=TEST_BASE}
+
+oneTimeSetUp() {
+  tmpdir=$(mktemp -d)
+  cp ../runasme $tmpdir
+  cp spy $tmpdir
+  echo "FROM $TEST_BASE" >> $tmpdir/Dockerfile
+  [[ $TEST_BASE == *"alpine"* ]] && echo "RUN apk add --no-cache sudo" >> $tmpdir/Dockerfile
+  [[ $TEST_BASE == *"ubuntu"* ]] && echo "RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*" >> $tmpdir/Dockerfile
+  echo "ADD runasme /runasme" >> $tmpdir/Dockerfile
+  echo "RUN chmod +x /runasme" >> $tmpdir/Dockerfile
+  echo "ADD spy /spy" >> $tmpdir/Dockerfile
+  echo "RUN chmod +x /spy" >> $tmpdir/Dockerfile
+
+  echo "ENV MY_VAR myValue"
+  echo 'ENTRYPOINT ["/runasme"]' >> $tmpdir/Dockerfile
+  docker build -t $TEST_TAG $tmpdir || exit 2
+}
+
+testPropertiesWithDefaultOptions() {
+  assertEquals "$(id -u):$(id -g)/user:user" "$(docker run --rm -v $PWD:/workdir $TEST_TAG /spy eval '$(id -u):$(id -g)/$(id -nu):$(id -ng)')"
+  assertEquals '$HOME'   "/home/user" "$(docker run --rm -v $PWD:/workdir $TEST_TAG /spy eval '$HOME')"
+  assertEquals '$PWD'    "/workdir" "$(docker run --rm -v $PWD:/workdir $TEST_TAG /spy eval '$PWD')"
+  assertEquals 'pwd'     "/workdir" "$(docker run --rm -v $PWD:/workdir $TEST_TAG pwd)"
+  assertEquals "myValue"  "$(docker run --rm -v $PWD:/workdir $TEST_TAG /spy eval '$MY_VAR')"
+}
+
+. $(which shunit2)
