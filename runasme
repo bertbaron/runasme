@@ -5,7 +5,7 @@ set -e
 user=${USER:-user}
 group=$GROUP
 
-while getopts ":u:g:h:" opt; do
+while getopts ":u:g:h" opt; do
   case $opt in
     h)
       echo "By default runs with the ownership (uid:gid) detected from the mounted /workdir folder"
